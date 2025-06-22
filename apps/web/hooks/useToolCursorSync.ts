@@ -1,8 +1,12 @@
 import { useEffect } from "react";
-import { useStore } from "./useStore";
 import { Tool } from "@repo/types";
+import { useStore } from "./useStore";
 
-export default function useCursorStyle() {
+/**
+ * Custom hook to synchronize cursor style with selected tool
+ * Updates canvas cursor appearance based on the currently selected drawing tool
+ */
+export const useToolCursorSync = () => {
   const { selectedTool } = useStore();
 
   useEffect(() => {
@@ -13,9 +17,15 @@ export default function useCursorStyle() {
       case Tool.Cursor:
         canvas.style.cursor = "default";
         break;
-      default:
+      case Tool.Rectangle:
+      case Tool.Ellipse:
+      case Tool.Pencil:
+      case Tool.Eraser:
         canvas.style.cursor = "crosshair";
+        break;
+      default:
+        canvas.style.cursor = "default";
         break;
     }
   }, [selectedTool]);
-}
+};

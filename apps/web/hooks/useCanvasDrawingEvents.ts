@@ -1,21 +1,28 @@
 import { RefObject, useCallback, useEffect } from "react";
-import { useStore } from "./useStore";
+import { v4 as uuidv4 } from "uuid";
+import { Tool } from "@repo/types";
+
+import { clearCanvas } from "@/lib/utils";
 import { RectangleTool } from "@/lib/tool/rectangle-tool";
 import { EllipseTool } from "@/lib/tool/ellipse-tool";
 import { PencilTool } from "@/lib/tool/pencil-tool";
-import { Tool } from "@repo/types";
-import { v4 as uuidv4 } from "uuid";
-import useShapeRenderer from "./useShapeRenderer";
-import { clearCanvas } from "@/lib/utils";
 
-export default function useCanvasDraw(
+import { useStore } from "./useStore";
+import { useShapeRenderer } from "./useShapeRenderer";
+
+/**
+ * Custom hook to handle mouse drawing events on canvas
+ * Manages mousedown, mousemove, and mouseup events for drawing shapes
+ * @param canvasRef - Reference to the canvas element
+ */
+export const useCanvasDrawingEvents = (
   canvasRef: RefObject<HTMLCanvasElement | null>
-) {
+) => {
   const { renderAllShapes } = useShapeRenderer(canvasRef);
   const { selectedTool, baseProperties, addShape, setSelectedTool } =
     useStore();
 
-  const createDrawTool = useCallback(
+  const createDrawingTool = useCallback(
     (ctx: CanvasRenderingContext2D) => {
       const config = { ctx, baseProperty: baseProperties };
 
@@ -40,27 +47,29 @@ export default function useCanvasDraw(
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const draw = createDrawTool(ctx);
-    if (!draw) return;
+    const drawingTool = createDrawingTool(ctx);
+    if (!drawingTool) return;
 
-    const handleMouseDown = (e: MouseEvent) => {
-      draw.handleMouseDown(e);
+    const handleMouseDown = (event: MouseEvent) => {
+      drawingTool.handleMouseDown(event);
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (event: MouseEvent) => {
       clearCanvas(canvas);
       renderAllShapes();
-      draw.handleMouseMove(e);
+      drawingTool.handleMouseMove(event);
     };
 
-    const handleMouseUp = (e: MouseEvent) => {
-      const drawn = draw.handleMouseUp();
-      if (drawn.isDrawn) {
+    const handleMouseUp = () => {
+      const drawnShape = drawingTool.handleMouseUp();
+
+      if (drawnShape.isDrawn) {
         addShape({
           id: uuidv4(),
           type: selectedTool,
-          properties: drawn.properties,
+          properties: drawnShape.properties,
         });
+
         if (selectedTool !== Tool.Pencil) {
           setSelectedTool(Tool.Cursor);
         }
@@ -76,5 +85,13 @@ export default function useCanvasDraw(
       canvas.removeEventListener("mousemove", handleMouseMove);
       canvas.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [selectedTool, baseProperties, createDrawTool, addShape, renderAllShapes]);
-}
+  }, [
+    canvasRef,
+    selectedTool,
+    baseProperties,
+    createDrawingTool,
+    addShape,
+    renderAllShapes,
+    setSelectedTool,
+  ]);
+};

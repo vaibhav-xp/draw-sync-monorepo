@@ -1,3 +1,4 @@
+import { RefObject, useCallback, useMemo } from "react";
 import {
   RectangleProperty,
   EllipseProperty,
@@ -6,37 +7,51 @@ import {
   Shape,
   BaseShapeProperty,
 } from "@repo/types";
-import { useStore } from "./useStore";
+
 import { RectangleTool } from "@/lib/tool/rectangle-tool";
 import { EllipseTool } from "@/lib/tool/ellipse-tool";
 import { PencilTool } from "@/lib/tool/pencil-tool";
-import { RefObject } from "react";
 
-export default function useShapeRenderer(
+import { useStore } from "./useStore";
+import { getThemeColors } from "@/lib/utils";
+
+/**
+ * Custom hook to render shapes on the canvas
+ * Handles theme-aware rendering and tool-specific shape drawing
+ * @param canvasRef - Reference to the canvas element
+ * @returns Object containing the renderAllShapes function
+ */
+export const useShapeRenderer = (
   canvasRef: RefObject<HTMLCanvasElement | null>
-) {
+) => {
   const { shapes } = useStore();
 
-  function setThemeColor(shape: Shape) {
-    const computedStyle = window.getComputedStyle(document.body);
-    const color = computedStyle.colorScheme === "dark" ? "white" : "black";
+  /**
+   * Updates shape colors based on current theme
+   * @param shape - The shape to update
+   */
+  const setThemeColor = useCallback((shape: Shape) => {
+    const { strokeColor } = getThemeColors();
 
     if (
       shape.properties.fillStyle === "white" ||
       shape.properties.fillStyle === "black"
     ) {
-      shape.properties.fillStyle = color;
+      shape.properties.fillStyle = strokeColor;
     }
 
     if (
       shape.properties.strokeStyle === "white" ||
       shape.properties.strokeStyle === "black"
     ) {
-      shape.properties.strokeStyle = color;
+      shape.properties.strokeStyle = strokeColor;
     }
-  }
+  }, []);
 
-  function renderAllShapes() {
+  /**
+   * Renders all shapes on the canvas
+   */
+  const renderAllShapes = useCallback(() => {
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
 
@@ -49,11 +64,11 @@ export default function useShapeRenderer(
         fillStyle: shape.properties.fillStyle,
         lineDash: shape.properties.lineDash,
         opacity: shape.properties.opacity,
-        borderRadius: (shape.properties as any).borderRadius ?? 0,
+        borderRadius: (shape.properties as RectangleProperty).borderRadius ?? 0,
       };
 
       switch (shape.type) {
-        case Tool.Rectangle:
+        case Tool.Rectangle: {
           const rectTool = new RectangleTool({
             ctx,
             baseProperty,
@@ -61,8 +76,9 @@ export default function useShapeRenderer(
           });
           rectTool.handleDraw();
           break;
+        }
 
-        case Tool.Ellipse:
+        case Tool.Ellipse: {
           const ellipseTool = new EllipseTool({
             ctx,
             baseProperty,
@@ -70,8 +86,9 @@ export default function useShapeRenderer(
           });
           ellipseTool.handleDraw();
           break;
+        }
 
-        case Tool.Pencil:
+        case Tool.Pencil: {
           const pencilTool = new PencilTool({
             ctx,
             baseProperty,
@@ -79,9 +96,14 @@ export default function useShapeRenderer(
           });
           pencilTool.handleDraw();
           break;
+        }
+
+        default:
+          console.warn(`Unknown shape type: ${shape.type}`);
+          break;
       }
     });
-  }
+  }, [canvasRef, shapes, setThemeColor]);
 
-  return { renderAllShapes };
-}
+  return useMemo(() => ({ renderAllShapes }), [renderAllShapes]);
+};

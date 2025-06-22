@@ -1,17 +1,28 @@
 "use client";
 
-import useCanvas from "@/hooks/useCanvas";
+import { useTheme } from "next-themes";
+import { useCanvas } from "@/hooks/useCanvas";
+import { ScreenLoader } from "@/components/ui/screen-loader";
 import MenuBar from "./MenuBar";
-import { PropertySidebar } from "./PropertySidebar";
+import { Sidebar } from "./Sidebar";
 
 export default function BoardPage() {
+  const { resolvedTheme } = useTheme();
   const { canvasRef } = useCanvas();
 
+  const isLoading = !resolvedTheme;
+
   return (
-    <section className="relative">
-      <MenuBar />
-      <canvas id="canvas" ref={canvasRef}></canvas>
-      <PropertySidebar />
-    </section>
+    <>
+      <ScreenLoader isLoading={isLoading} />
+
+      {!isLoading && (
+        <section className="relative">
+          <MenuBar />
+          <canvas id="canvas" ref={canvasRef}></canvas>
+          <Sidebar />
+        </section>
+      )}
+    </>
   );
 }

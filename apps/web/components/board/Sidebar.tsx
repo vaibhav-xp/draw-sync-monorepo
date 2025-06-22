@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useStore } from "@/hooks/useStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
+import { SelectedIndicator } from "@/components/ui/selected-indicator";
 import { Separator } from "@/components/ui/separator";
 import {
   ChevronLeft,
@@ -19,6 +20,8 @@ import {
   MoreVertical,
 } from "lucide-react";
 import { getThemeColors } from "@/lib/utils";
+import { BaseShapeProperty } from "@repo/types";
+import { useTheme } from "next-themes";
 
 const BASE_STROKE_COLORS = [
   { color: "#ef4444", name: "Red" },
@@ -84,43 +87,25 @@ const BORDER_RADIUS_OPTIONS = [
   },
 ];
 
-export function PropertySidebar() {
+export function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
   const { baseProperties, setBaseProperties } = useStore();
+  const { resolvedTheme } = useTheme();
 
   const STROKE_COLORS = useMemo(() => {
-    const { isDark } = getThemeColors();
+    if (!resolvedTheme) return [];
+
+    const isDark = resolvedTheme === "dark";
 
     if (isDark) {
       return [{ color: "white", name: "White" }, ...BASE_STROKE_COLORS];
     } else {
       return [{ color: "black", name: "Black" }, ...BASE_STROKE_COLORS];
     }
-  }, []);
+  }, [resolvedTheme]);
 
-  const handleStrokeColorChange = (color: string) => {
-    setBaseProperties({ ...baseProperties, strokeStyle: color });
-  };
-
-  const handleFillColorChange = (color: string) => {
-    setBaseProperties({ ...baseProperties, fillStyle: color });
-  };
-
-  const handleStrokeWidthChange = (width: number) => {
-    setBaseProperties({ ...baseProperties, lineWidth: width });
-  };
-
-  const handleLineStyleChange = (pattern: number[]) => {
-    setBaseProperties({ ...baseProperties, lineDash: pattern });
-  };
-
-  const handleBorderRadiusChange = (radius: number) => {
-    setBaseProperties({ ...baseProperties, borderRadius: radius });
-  };
-
-  const handleOpacityChange = (values: number[]) => {
-    const opacity = values[0] ?? 100;
-    setBaseProperties({ ...baseProperties, opacity: opacity / 100 });
+  const handleOnChange = (newProperty: Partial<BaseShapeProperty>) => {
+    setBaseProperties({ ...baseProperties, ...newProperty });
   };
 
   return (
@@ -179,18 +164,16 @@ export function PropertySidebar() {
                           : color,
                     border: color === "white" ? "1px solid #e5e7eb" : undefined,
                   }}
-                  onClick={() => handleStrokeColorChange(color)}
+                  onClick={() => handleOnChange({ strokeStyle: color })}
                 >
                   {color === "transparent" && (
                     <div className="absolute inset-1 bg-gradient-to-br from-red-500/20 via-transparent to-red-500/20 rounded">
                       <div className="w-full h-0.5 bg-red-400 absolute top-1/2 left-0 rotate-45 origin-center opacity-50"></div>
                     </div>
                   )}
-                  {baseProperties.strokeStyle === color && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                      <div className="w-1 h-1 bg-white rounded-full"></div>
-                    </div>
-                  )}
+                  <SelectedIndicator
+                    isSelected={baseProperties.strokeStyle === color}
+                  />
                 </Button>
               ))}
             </div>
@@ -221,18 +204,16 @@ export function PropertySidebar() {
                     backgroundColor:
                       color === "transparent" ? "#ffffff" : color,
                   }}
-                  onClick={() => handleFillColorChange(color)}
+                  onClick={() => handleOnChange({ fillStyle: color })}
                 >
                   {color === "transparent" && (
                     <div className="absolute inset-1 bg-gradient-to-br from-red-500/20 via-transparent to-red-500/20 rounded">
                       <div className="w-full h-0.5 bg-red-400 absolute top-1/2 left-0 rotate-45 origin-center opacity-50"></div>
                     </div>
                   )}
-                  {baseProperties.fillStyle === color && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center shadow-lg border-2 border-white">
-                      <div className="w-1 h-1 bg-white rounded-full"></div>
-                    </div>
-                  )}
+                  <SelectedIndicator
+                    isSelected={baseProperties.fillStyle === color}
+                  />
                 </Button>
               ))}
             </div>
@@ -258,14 +239,17 @@ export function PropertySidebar() {
                     baseProperties.lineWidth === width ? "default" : "outline"
                   }
                   size="icon"
-                  className={`h-6 w-full border-2 transition-all hover:scale-105 ${
+                  className={`relative h-6 w-full border-2 transition-all hover:scale-105 ${
                     baseProperties.lineWidth === width
                       ? "shadow-sm ring-2 ring-primary/20"
                       : "hover:border-primary/50"
                   }`}
-                  onClick={() => handleStrokeWidthChange(width)}
+                  onClick={() => handleOnChange({ lineWidth: width })}
                 >
                   {icon}
+                  <SelectedIndicator
+                    isSelected={baseProperties.lineWidth === width}
+                  />
                 </Button>
               ))}
             </div>
@@ -289,15 +273,21 @@ export function PropertySidebar() {
                       : "outline"
                   }
                   size="icon"
-                  className={`h-6 w-full border-2 transition-all hover:scale-105 ${
+                  className={`relative h-6 w-full border-2 transition-all hover:scale-105 ${
                     JSON.stringify(baseProperties.lineDash) ===
                     JSON.stringify(pattern)
                       ? "shadow-sm ring-2 ring-primary/20"
                       : "hover:border-primary/50"
                   }`}
-                  onClick={() => handleLineStyleChange(pattern)}
+                  onClick={() => handleOnChange({ lineDash: pattern })}
                 >
                   {icon}
+                  <SelectedIndicator
+                    isSelected={
+                      JSON.stringify(baseProperties.lineDash) ===
+                      JSON.stringify(pattern)
+                    }
+                  />
                 </Button>
               ))}
             </div>
@@ -320,14 +310,17 @@ export function PropertySidebar() {
                       : "outline"
                   }
                   size="icon"
-                  className={`h-6 w-full border-2 transition-all hover:scale-105 ${
+                  className={`relative h-6 w-full border-2 transition-all hover:scale-105 ${
                     baseProperties.borderRadius === radius
                       ? "shadow-sm ring-2 ring-primary/20"
                       : "hover:border-primary/50"
                   }`}
-                  onClick={() => handleBorderRadiusChange(radius)}
+                  onClick={() => handleOnChange({ borderRadius: radius })}
                 >
                   {icon}
+                  <SelectedIndicator
+                    isSelected={baseProperties.borderRadius === radius}
+                  />
                 </Button>
               ))}
             </div>
@@ -348,7 +341,9 @@ export function PropertySidebar() {
             <div className="px-0.5">
               <Slider
                 value={[baseProperties.opacity * 100]}
-                onValueChange={handleOpacityChange}
+                onValueChange={(values) =>
+                  handleOnChange({ opacity: (values[0] ?? 100) / 100 })
+                }
                 max={100}
                 min={0}
                 step={1}

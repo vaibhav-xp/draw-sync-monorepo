@@ -11,7 +11,7 @@ export const initialBaseProperties: BaseShapeProperty = {
   lineWidth: 1,
   fillStyle: "transparent",
   lineDash: [],
-  borderRadius: 0,
+  borderRadius: 8,
   opacity: 1,
 };
 
