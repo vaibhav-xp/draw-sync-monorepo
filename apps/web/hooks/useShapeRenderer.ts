@@ -8,9 +8,9 @@ import {
   BaseShapeProperty,
 } from "@repo/types";
 
-import { RectangleTool } from "@/lib/tool/rectangle-tool";
-import { EllipseTool } from "@/lib/tool/ellipse-tool";
-import { PencilTool } from "@/lib/tool/pencil-tool";
+import { RectangleTool } from "@/lib/tools/rectangle-tool";
+import { EllipseTool } from "@/lib/tools/ellipse-tool";
+import { PencilTool } from "@/lib/tools/pencil-tool";
 
 import { useStore } from "./useStore";
 import { getThemeColors } from "@/lib/utils";

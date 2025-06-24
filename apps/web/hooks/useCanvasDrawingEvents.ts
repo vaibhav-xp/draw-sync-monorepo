@@ -3,9 +3,9 @@ import { v4 as uuidv4 } from "uuid";
 import { Tool } from "@repo/types";
 
 import { clearCanvas } from "@/lib/utils";
-import { RectangleTool } from "@/lib/tool/rectangle-tool";
-import { EllipseTool } from "@/lib/tool/ellipse-tool";
-import { PencilTool } from "@/lib/tool/pencil-tool";
+import { RectangleTool } from "@/lib/tools/rectangle-tool";
+import { EllipseTool } from "@/lib/tools/ellipse-tool";
+import { PencilTool } from "@/lib/tools/pencil-tool";
 
 import { useStore } from "./useStore";
 import { useShapeRenderer } from "./useShapeRenderer";

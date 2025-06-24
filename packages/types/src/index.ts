@@ -26,37 +26,41 @@ export interface BaseShapeProperty {
 
 /**
  * Rectangle shape properties
- * @x - x axis position
- * @y - y axis position
+ * @startX - start X coordinate
+ * @startY - start Y coordinate
  * @width - rectangle width
  * @height - rectangle height
  */
 export interface RectangleProperty extends BaseShapeProperty {
-  x: number;
-  y: number;
+  startX: number;
+  startY: number;
   width: number;
   height: number;
 }
 
 /**
  * Ellipse shape properties
- * @y - y axis position (center Y)
+ * @startX - start X coordinate (center X)
+ * @startY - start Y coordinate (center Y)
+ * @centerX - center X coordinate
+ * @centerY - center Y coordinate
  * @radiusX - horizontal radius
  * @radiusY - vertical radius
  * @rotation - rotation angle in radians
  * @startAngle - start angle for drawing
  * @endAngle - end angle for drawing
- * @centerX - center X coordinate
  */
 export interface EllipseProperty
   extends Omit<BaseShapeProperty, "borderRadius"> {
-  y: number;
+  startX: number;
+  startY: number;
+  centerX: number;
+  centerY: number;
   radiusX: number;
   radiusY: number;
   rotation: number;
   startAngle: number;
   endAngle: number;
-  centerX: number;
 }
 
 /**

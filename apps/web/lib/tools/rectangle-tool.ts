@@ -4,20 +4,18 @@ import { THRESHOLD } from "../utils";
 
 export class RectangleTool extends BaseTool<RectangleProperty> {
   properties = {
-    x: 0,
-    y: 0,
+    startX: 0,
+    startY: 0,
     width: 0,
     height: 0,
   };
-  private startX: number = 0;
-  private startY: number = 0;
 
   constructor(config: DrawingToolConfig<RectangleProperty>) {
     super(config);
     if (config.renderProperty) {
       this.properties = {
-        x: config.renderProperty.x,
-        y: config.renderProperty.y,
+        startX: config.renderProperty.startX,
+        startY: config.renderProperty.startY,
         width: config.renderProperty.width,
         height: config.renderProperty.height,
       };
@@ -36,8 +34,8 @@ export class RectangleTool extends BaseTool<RectangleProperty> {
 
     this.ctx.beginPath();
     this.ctx.roundRect(
-      this.properties.x,
-      this.properties.y,
+      this.properties.startX,
+      this.properties.startY,
       this.properties.width,
       this.properties.height,
       this.baseProperty.borderRadius
@@ -51,14 +49,16 @@ export class RectangleTool extends BaseTool<RectangleProperty> {
   handleMouseDown(event: MouseEvent) {
     this.isDrawing = true;
     const coords = this.getCanvasCoordinates(event);
-    this.startX = coords.x;
-    this.startY = coords.y;
+    this.properties = {
+      ...this.properties,
+      startX: coords.x,
+      startY: coords.y,
+    };
 
     this.properties = {
-      x: this.startX,
-      y: this.startY,
-      width: 0,
-      height: 0,
+      ...this.properties,
+      startX: this.properties.startX,
+      startY: this.properties.startY,
     };
   }
 
@@ -69,10 +69,10 @@ export class RectangleTool extends BaseTool<RectangleProperty> {
       const currentY = coords.y;
 
       this.properties = {
-        x: Math.min(this.startX, currentX),
-        y: Math.min(this.startY, currentY),
-        width: Math.abs(currentX - this.startX),
-        height: Math.abs(currentY - this.startY),
+        startX: Math.min(this.properties.startX, currentX),
+        startY: Math.min(this.properties.startY, currentY),
+        width: Math.abs(currentX - this.properties.startX),
+        height: Math.abs(currentY - this.properties.startY),
       };
 
       this.handleDraw();
