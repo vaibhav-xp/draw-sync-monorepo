@@ -2,7 +2,6 @@ import { useContext } from "react";
 import { StoreContext } from "@/store";
 
 /**
- * Custom hook to access the store context
  * @returns The store context with state and actions
  * @throws Error if used outside of StoreContextProvider
  */

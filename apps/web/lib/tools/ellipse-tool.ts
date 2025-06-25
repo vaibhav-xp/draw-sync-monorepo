@@ -93,7 +93,6 @@ export class EllipseTool extends BaseTool<EllipseProperty> {
 
   handleMouseUp() {
     this.isDrawing = false;
-    console.log({ ...this.properties });
     return {
       isDrawn: this.isDrawn,
       properties: {
@@ -101,5 +100,89 @@ export class EllipseTool extends BaseTool<EllipseProperty> {
         ...this.baseProperty,
       },
     };
+  }
+
+  handleIsCursorOnShape(event: MouseEvent) {
+    if (!this.config.renderProperty) return false;
+
+    const coords = this.getCanvasCoordinates(event);
+    const centerX = this.config.renderProperty.centerX;
+    const centerY = this.config.renderProperty.centerY;
+    const radiusX = this.config.renderProperty.radiusX;
+    const radiusY = this.config.renderProperty.radiusY;
+
+    const dx = coords.x - centerX;
+    const dy = coords.y - centerY;
+
+    // Check if shape has fill style - if so, check if cursor is inside the filled area
+    const hasFill =
+      this.baseProperty.fillStyle &&
+      this.baseProperty.fillStyle !== "transparent" &&
+      this.baseProperty.fillStyle !== "rgba(0,0,0,0)";
+
+    if (hasFill) {
+      // Check if cursor is inside the ellipse (filled area)
+      // Use the ellipse equation: (x/radiusX)² + (y/radiusY)² <= 1
+      const normalizedDistance =
+        (dx * dx) / (radiusX * radiusX) + (dy * dy) / (radiusY * radiusY);
+      if (normalizedDistance <= 1) {
+        return true;
+      }
+    }
+
+    // Always check border detection regardless of fill
+    const threshold = Math.max(this.baseProperty.lineWidth / 2, 5);
+    const distance = this.distanceToEllipseBorder(dx, dy, radiusX, radiusY);
+
+    return distance <= threshold;
+  }
+
+  getShapeBounds() {
+    if (!this.config.renderProperty)
+      return { left: 0, top: 0, right: 0, bottom: 0 };
+
+    const centerX = this.config.renderProperty.centerX;
+    const centerY = this.config.renderProperty.centerY;
+    const radiusX = this.config.renderProperty.radiusX;
+    const radiusY = this.config.renderProperty.radiusY;
+
+    return {
+      left: centerX - radiusX,
+      top: centerY - radiusY,
+      right: centerX + radiusX,
+      bottom: centerY + radiusY,
+    };
+  }
+
+  private distanceToEllipseBorder(
+    dx: number,
+    dy: number,
+    radiusX: number,
+    radiusY: number
+  ): number {
+    // Normalize the point to unit circle space
+    const normalizedX = dx / radiusX;
+    const normalizedY = dy / radiusY;
+
+    // Distance from center in normalized space
+    const distanceFromCenter = Math.sqrt(
+      normalizedX * normalizedX + normalizedY * normalizedY
+    );
+
+    // If point is at center, return the minimum radius
+    if (distanceFromCenter === 0) {
+      return Math.min(radiusX, radiusY);
+    }
+
+    // Calculate the point on the ellipse border in the direction of the given point
+    const angle = Math.atan2(normalizedY, normalizedX);
+    const borderX = radiusX * Math.cos(angle);
+    const borderY = radiusY * Math.sin(angle);
+
+    // Calculate actual distance to border
+    const actualDistance = Math.sqrt(dx * dx + dy * dy);
+    const borderDistance = Math.sqrt(borderX * borderX + borderY * borderY);
+
+    return Math.abs(actualDistance - borderDistance);
   }
 }

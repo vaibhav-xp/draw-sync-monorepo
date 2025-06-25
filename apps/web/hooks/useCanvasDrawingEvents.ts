@@ -11,7 +11,6 @@ import { useStore } from "./useStore";
 import { useShapeRenderer } from "./useShapeRenderer";
 
 /**
- * Custom hook to handle mouse drawing events on canvas
  * Manages mousedown, mousemove, and mouseup events for drawing shapes
  * @param canvasRef - Reference to the canvas element
  */

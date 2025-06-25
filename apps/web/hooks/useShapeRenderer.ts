@@ -12,19 +12,18 @@ import { RectangleTool } from "@/lib/tools/rectangle-tool";
 import { EllipseTool } from "@/lib/tools/ellipse-tool";
 import { PencilTool } from "@/lib/tools/pencil-tool";
 
-import { useStore } from "./useStore";
+import { useSelectionRenderer } from "./useSelectionRenderer";
+import { useShapeDragging } from "./useShapeDragging";
 import { getThemeColors } from "@/lib/utils";
 
 /**
- * Custom hook to render shapes on the canvas
  * Handles theme-aware rendering and tool-specific shape drawing
- * @param canvasRef - Reference to the canvas element
- * @returns Object containing the renderAllShapes function
  */
 export const useShapeRenderer = (
   canvasRef: RefObject<HTMLCanvasElement | null>
 ) => {
-  const { shapes } = useStore();
+  const { renderSelectionOverlay } = useSelectionRenderer(canvasRef);
+  const { getDraggedShapesPreview } = useShapeDragging();
 
   /**
    * Updates shape colors based on current theme
@@ -49,13 +48,10 @@ export const useShapeRenderer = (
   }, []);
 
   /**
-   * Renders all shapes on the canvas
+   * Renders a single shape on the canvas
    */
-  const renderAllShapes = useCallback(() => {
-    const ctx = canvasRef.current?.getContext("2d");
-    if (!ctx) return;
-
-    shapes.forEach((shape) => {
+  const renderShape = useCallback(
+    (ctx: CanvasRenderingContext2D, shape: Shape) => {
       setThemeColor(shape);
 
       const baseProperty: BaseShapeProperty = {
@@ -102,8 +98,28 @@ export const useShapeRenderer = (
           console.warn(`Unknown shape type: ${shape.type}`);
           break;
       }
+    },
+    [setThemeColor]
+  );
+
+  /**
+   * Renders all shapes on the canvas using drag preview positions if dragging
+   */
+  const renderAllShapes = useCallback(() => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx) return;
+
+    // Use drag preview positions if currently dragging, otherwise use original shapes
+    const shapesToRender = getDraggedShapesPreview();
+
+    // Render all shapes first
+    shapesToRender.forEach((shape) => {
+      renderShape(ctx, shape);
     });
-  }, [canvasRef, shapes, setThemeColor]);
+
+    // Then render selection overlay on top using the same positions (drag preview or original)
+    renderSelectionOverlay(shapesToRender);
+  }, [canvasRef, renderShape, renderSelectionOverlay, getDraggedShapesPreview]);
 
   return useMemo(() => ({ renderAllShapes }), [renderAllShapes]);
 };

@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect, useMemo } from "react";
 
 /**
- * Custom hook to manage canvas element and context
  * Provides canvas reference, 2D context, and ready state
  * @returns Object containing canvas reference, context, and ready state
  */

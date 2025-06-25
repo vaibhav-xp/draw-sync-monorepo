@@ -1,7 +1,6 @@
 import { useEffect, RefObject } from "react";
 
 /**
- * Custom hook to automatically resize canvas to fit window dimensions
  * Handles both initial sizing and window resize events
  * @param canvasRef - Reference to the canvas element to resize
  */

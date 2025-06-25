@@ -26,6 +26,42 @@ export abstract class BaseTool<T> implements IDrawingHandler<T> {
     };
   }
 
+  /**
+   * Gets the bounding rectangle of the shape for selection indicator
+   */
+  abstract getShapeBounds(): {
+    left: number;
+    top: number;
+    right: number;
+    bottom: number;
+  };
+
+  /**
+   * Draws a standard rectangular selection indicator around the shape
+   * This is consistent for all shapes to support resize handles
+   */
+  drawSelectionIndicator(): void {
+    if (!this.config.renderProperty) return;
+
+    const bounds = this.getShapeBounds();
+    const padding = 8;
+
+    this.ctx.save();
+    this.ctx.strokeStyle = "#007ACC";
+    this.ctx.lineWidth = 2;
+    this.ctx.setLineDash([5, 5]);
+    this.ctx.globalAlpha = 0.8;
+
+    this.ctx.strokeRect(
+      bounds.left - padding,
+      bounds.top - padding,
+      bounds.right - bounds.left + 2 * padding,
+      bounds.bottom - bounds.top + 2 * padding
+    );
+
+    this.ctx.restore();
+  }
+
   abstract properties: Omit<
     T,
     | "strokeStyle"
@@ -43,4 +79,5 @@ export abstract class BaseTool<T> implements IDrawingHandler<T> {
     isDrawn: boolean;
     properties: T;
   };
+  abstract handleIsCursorOnShape(event: MouseEvent): boolean;
 }

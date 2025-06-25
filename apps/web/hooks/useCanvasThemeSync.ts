@@ -4,7 +4,6 @@ import { clearCanvas } from "@/lib/utils";
 import { useShapeRenderer } from "./useShapeRenderer";
 
 /**
- * Custom hook to synchronize canvas with theme changes
  * Automatically clears and re-renders canvas when dark/light theme changes
  * @param canvasRef - Reference to the canvas element
  */

@@ -14,6 +14,8 @@ import {
   StoreContextType,
   BaseShapeProperty,
   StoreAction,
+  SelectionRect,
+  DragState,
 } from "@repo/types";
 import { storeReducer, initialState, initialBaseProperties } from "./reducer";
 import { useTheme } from "next-themes";
@@ -21,12 +23,29 @@ import { useTheme } from "next-themes";
 export const StoreContext = createContext<StoreContextType>({
   selectedTool: Tool.Cursor,
   shapes: [],
+  selectedShapes: [],
+  selectionRect: null,
+  dragState: {
+    isDragging: false,
+    startPosition: { x: 0, y: 0 },
+    currentOffset: { x: 0, y: 0 },
+    draggedShapes: [],
+  },
   setSelectedTool: () => {},
   baseProperties: initialBaseProperties,
   addShape: () => {},
   updateShape: () => {},
   deleteShape: () => {},
   setBaseProperties: () => {},
+  setSelectedShapes: () => {},
+  addShapeToSelection: () => {},
+  removeShapeFromSelection: () => {},
+  clearSelection: () => {},
+  setSelectionRect: () => {},
+  startDrag: () => {},
+  updateDrag: () => {},
+  endDrag: () => {},
+  batchUpdateShapes: () => {},
 });
 
 export const StoreContextProvider = ({ children }: { children: ReactNode }) => {
@@ -56,6 +75,54 @@ export const StoreContextProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+  const setSelectedShapes = useCallback((shapeIds: string[]) => {
+    dispatch({ type: StoreAction.SET_SELECTED_SHAPES, payload: shapeIds });
+  }, []);
+
+  const addShapeToSelection = useCallback((shapeId: string) => {
+    dispatch({ type: StoreAction.ADD_SHAPE_TO_SELECTION, payload: shapeId });
+  }, []);
+
+  const removeShapeFromSelection = useCallback((shapeId: string) => {
+    dispatch({
+      type: StoreAction.REMOVE_SHAPE_FROM_SELECTION,
+      payload: shapeId,
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    dispatch({ type: StoreAction.CLEAR_SELECTION });
+  }, []);
+
+  const setSelectionRect = useCallback((rect: SelectionRect | null) => {
+    dispatch({ type: StoreAction.SET_SELECTION_RECT, payload: rect });
+  }, []);
+
+  const startDrag = useCallback(
+    (startPosition: { x: number; y: number }, shapeIds: string[]) => {
+      dispatch({
+        type: StoreAction.START_DRAG,
+        payload: { startPosition, shapeIds },
+      });
+    },
+    []
+  );
+
+  const updateDrag = useCallback((position: { x: number; y: number }) => {
+    dispatch({ type: StoreAction.UPDATE_DRAG, payload: position });
+  }, []);
+
+  const endDrag = useCallback(() => {
+    dispatch({ type: StoreAction.END_DRAG });
+  }, []);
+
+  const batchUpdateShapes = useCallback(
+    (updates: { id: string; shape: Partial<Shape> }[]) => {
+      dispatch({ type: StoreAction.BATCH_UPDATE_SHAPES, payload: updates });
+    },
+    []
+  );
+
   // Sync base properties with theme
   useEffect(() => {
     if (!resolvedTheme) return;
@@ -72,21 +139,45 @@ export const StoreContextProvider = ({ children }: { children: ReactNode }) => {
       selectedTool: state.selectedTool,
       shapes: state.shapes,
       baseProperties: state.baseProperties,
+      selectedShapes: state.selectedShapes,
+      selectionRect: state.selectionRect,
+      dragState: state.dragState,
       setSelectedTool,
       addShape,
       updateShape,
       deleteShape,
       setBaseProperties,
+      setSelectedShapes,
+      addShapeToSelection,
+      removeShapeFromSelection,
+      clearSelection,
+      setSelectionRect,
+      startDrag,
+      updateDrag,
+      endDrag,
+      batchUpdateShapes,
     }),
     [
       state.selectedTool,
       state.shapes,
       state.baseProperties,
+      state.selectedShapes,
+      state.selectionRect,
+      state.dragState,
       setSelectedTool,
       addShape,
       updateShape,
       deleteShape,
       setBaseProperties,
+      setSelectedShapes,
+      addShapeToSelection,
+      removeShapeFromSelection,
+      clearSelection,
+      setSelectionRect,
+      startDrag,
+      updateDrag,
+      endDrag,
+      batchUpdateShapes,
     ]
   );
 

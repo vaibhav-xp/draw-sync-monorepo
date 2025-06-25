@@ -86,19 +86,57 @@ export interface Shape {
   properties: RectangleProperty | EllipseProperty | PencilProperty;
 }
 
+/**
+ * Selection rectangle for drag-to-select functionality
+ */
+export interface SelectionRect {
+  startX: number;
+  startY: number;
+  endX: number;
+  endY: number;
+}
+
+/**
+ * Drag state for tracking shape movement
+ */
+export interface DragState {
+  isDragging: boolean;
+  startPosition: { x: number; y: number };
+  currentOffset: { x: number; y: number };
+  draggedShapes: string[]; // IDs of shapes being dragged
+}
+
 // Action types
 export type ShapeAction =
   | { type: "ADD_SHAPE"; payload: Shape }
   | { type: "UPDATE_SHAPE"; payload: { id: string; shape: Partial<Shape> } }
   | { type: "DELETE_SHAPE"; payload: string }
   | { type: "SET_SELECTED_TOOL"; payload: Tool }
-  | { type: "SET_BASE_PROPERTIES"; payload: BaseShapeProperty };
+  | { type: "SET_BASE_PROPERTIES"; payload: BaseShapeProperty }
+  | { type: "SET_SELECTED_SHAPES"; payload: string[] }
+  | { type: "ADD_SHAPE_TO_SELECTION"; payload: string }
+  | { type: "REMOVE_SHAPE_FROM_SELECTION"; payload: string }
+  | { type: "CLEAR_SELECTION" }
+  | { type: "SET_SELECTION_RECT"; payload: SelectionRect | null }
+  | {
+      type: "START_DRAG";
+      payload: { startPosition: { x: number; y: number }; shapeIds: string[] };
+    }
+  | { type: "UPDATE_DRAG"; payload: { x: number; y: number } }
+  | { type: "END_DRAG" }
+  | {
+      type: "BATCH_UPDATE_SHAPES";
+      payload: { id: string; shape: Partial<Shape> }[];
+    };
 
 // State interface
 export interface StoreState {
   selectedTool: Tool;
   shapes: Shape[];
   baseProperties: BaseShapeProperty;
+  selectedShapes: string[];
+  selectionRect: SelectionRect | null;
+  dragState: DragState;
 }
 
 // Context interface
@@ -106,11 +144,26 @@ export interface StoreContextType {
   selectedTool: Tool;
   shapes: Shape[];
   baseProperties: BaseShapeProperty;
+  selectedShapes: string[];
+  selectionRect: SelectionRect | null;
+  dragState: DragState;
   setSelectedTool: (tool: Tool) => void;
   addShape: (shape: Shape) => void;
   updateShape: (id: string, shape: Partial<Shape>) => void;
   deleteShape: (id: string) => void;
   setBaseProperties: (baseProperties: BaseShapeProperty) => void;
+  setSelectedShapes: (shapeIds: string[]) => void;
+  addShapeToSelection: (shapeId: string) => void;
+  removeShapeFromSelection: (shapeId: string) => void;
+  clearSelection: () => void;
+  setSelectionRect: (rect: SelectionRect | null) => void;
+  startDrag: (
+    startPosition: { x: number; y: number },
+    shapeIds: string[]
+  ) => void;
+  updateDrag: (position: { x: number; y: number }) => void;
+  endDrag: () => void;
+  batchUpdateShapes: (updates: { id: string; shape: Partial<Shape> }[]) => void;
 }
 
 export enum StoreAction {
@@ -119,6 +172,15 @@ export enum StoreAction {
   DELETE_SHAPE = "DELETE_SHAPE",
   SET_SELECTED_TOOL = "SET_SELECTED_TOOL",
   SET_BASE_PROPERTIES = "SET_BASE_PROPERTIES",
+  SET_SELECTED_SHAPES = "SET_SELECTED_SHAPES",
+  ADD_SHAPE_TO_SELECTION = "ADD_SHAPE_TO_SELECTION",
+  REMOVE_SHAPE_FROM_SELECTION = "REMOVE_SHAPE_FROM_SELECTION",
+  CLEAR_SELECTION = "CLEAR_SELECTION",
+  SET_SELECTION_RECT = "SET_SELECTION_RECT",
+  START_DRAG = "START_DRAG",
+  UPDATE_DRAG = "UPDATE_DRAG",
+  END_DRAG = "END_DRAG",
+  BATCH_UPDATE_SHAPES = "BATCH_UPDATE_SHAPES",
 }
 
 export interface IDrawingHandler<T> {
@@ -138,6 +200,7 @@ export interface IDrawingHandler<T> {
     isDrawn: boolean;
     properties: T;
   };
+  handleIsCursorOnShape: (event: MouseEvent) => boolean;
 }
 
 // Generic tool configuration interface
